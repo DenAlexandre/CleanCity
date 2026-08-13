@@ -1,6 +1,7 @@
 using CortexiaAuth.Api.Data;
 using CortexiaAuth.Api.Models;
 using CortexiaAuth.Api.Services;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -71,7 +72,8 @@ builder.Services.AddSingleton<IAlarmEmailSender, SmtpAlarmEmailSender>();
 builder.Services.AddScoped<IAlarmDetectionService, AlarmDetectionService>();
 builder.Services.AddScoped<IServerTaskService, ServerTaskService>();
 
-builder.Services.AddDataProtection();
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<AppDbContext>();
 builder.Services.AddSingleton<ICortexiaCredentialProtector, CortexiaCredentialProtector>();
 builder.Services.AddSingleton<PasswordHasher<AppUser>>();
 

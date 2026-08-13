@@ -1,10 +1,15 @@
 using CortexiaAuth.Api.Models;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CortexiaAuth.Api.Data;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IDataProtectionKeyContext
 {
+    // Persiste les cles Data Protection en base : le systeme de fichiers de Render est ephemere,
+    // sans ca les cles (et donc CortexiaPasswordProtected) seraient perdues a chaque redeploiement/restart.
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     public DbSet<AccessTokenRecord> AccessTokens => Set<AccessTokenRecord>();
     public DbSet<AppUser> AppUsers => Set<AppUser>();
     public DbSet<Role> Roles => Set<Role>();
