@@ -15,6 +15,11 @@ public interface IServerTaskService
     Task<int> AssignItineraryNumbersAsync(CancellationToken cancellationToken);
 
     Task<int> DetectAlarmsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Récupère depuis Cortexia les relevés et notes Cci bruts (JSON) d'une journée donnée, sans les importer.</summary>
+    Task<CortexiaDailyDataResult> DownloadDailyDataAsync(DateOnly date, CancellationToken cancellationToken);
 }
 
 public record ImportMeasurementsResult(int SnapshotsImported, int CciMeasurementsImported);
+
+public record CortexiaDailyDataResult(byte[] SnapshotsJson, byte[] CciMeasurementsJson);

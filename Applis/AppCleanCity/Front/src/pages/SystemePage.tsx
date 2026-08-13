@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { exportDatabase, ExportError } from '../api/exportApi'
-import { importSnapshots, clearImportData, ImportError } from '../api/importApi'
+import { importSnapshots, importCciMeasurements, clearImportData, ImportError } from '../api/importApi'
 import { clearAlarms, AlarmsError } from '../api/alarmsApi'
 import {
   assignItineraryNumbers,
   cleanupDuplicateMeasurements,
   detectAlarms,
+  downloadCortexiaData,
   importEdgesAndPlaces,
   importMeasurements,
   ServerTaskError,
@@ -95,6 +96,7 @@ export function SystemePage() {
 
       <ClearImportDataCard />
       <TasksCard />
+      <CortexiaFilesCard />
       <AlarmesManagementCard />
     </div>
   )
@@ -194,6 +196,129 @@ function TasksCard() {
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+// Complète la tâche "Importer les relevés Cortexia" (qui repart toujours du dernier point de reprise) :
+// permet de récupérer/rejouer manuellement les fichiers JSON bruts d'une date précise.
+function CortexiaFilesCard() {
+  const { siteCredentials } = useAuth()
+  const [date, setDate] = useState('')
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+
+  const snapshotsInputRef = useRef<HTMLInputElement>(null)
+  const cciInputRef = useRef<HTMLInputElement>(null)
+  const [snapshotsFile, setSnapshotsFile] = useState<File | null>(null)
+  const [cciFile, setCciFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null)
+
+  async function handleDownload() {
+    if (!siteCredentials || !date) return
+    setDownloadError(null)
+    setIsDownloading(true)
+    try {
+      const { blob, fileName } = await downloadCortexiaData(siteCredentials, date)
+      downloadBlob(blob, fileName)
+    } catch (err) {
+      setDownloadError(err instanceof ServerTaskError ? err.message : 'Erreur inattendue lors du téléchargement.')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  async function handleUpload() {
+    if (!siteCredentials || (!snapshotsFile && !cciFile)) return
+    setUploadError(null)
+    setUploadSuccess(null)
+    setIsUploading(true)
+    try {
+      const messages: string[] = []
+      if (snapshotsFile) {
+        const result = await importSnapshots(siteCredentials, snapshotsFile)
+        messages.push(`${result.rowCount} relevé(s) importé(s), ${result.alarmsCreated} alarme(s) créée(s)`)
+      }
+      if (cciFile) {
+        const result = await importCciMeasurements(siteCredentials, cciFile)
+        messages.push(`${result.rowCount} mesure(s) Cci importée(s)`)
+      }
+      setUploadSuccess(`${messages.join(', ')}.`)
+      setSnapshotsFile(null)
+      setCciFile(null)
+      if (snapshotsInputRef.current) snapshotsInputRef.current.value = ''
+      if (cciInputRef.current) cciInputRef.current.value = ''
+    } catch (err) {
+      setUploadError(err instanceof ImportError ? err.message : "Erreur inattendue lors de l'import.")
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const readOnly = !siteCredentials
+
+  return (
+    <div className="systeme-card systeme-card-wide">
+      <h3>Fichiers Cortexia (JSON)</h3>
+      <p>
+        Télécharge les relevés et notes Cci bruts reçus de Cortexia pour une date donnée, ou recharge de tels
+        fichiers en base — utile pour rattraper une date précise sans dépendre du point de reprise automatique.
+      </p>
+
+      {readOnly && <p className="systeme-error">Réservé aux comptes disposant du droit "Système".</p>}
+
+      <div className="systeme-subsection-row">
+        <div className="systeme-subsection">
+          <h4>Télécharger</h4>
+          <label className="systeme-field">
+            <span>Date</span>
+            <input type="date" value={date} disabled={readOnly} onChange={(e) => setDate(e.target.value)} />
+          </label>
+
+          {downloadError && <p className="systeme-error">{downloadError}</p>}
+
+          <button type="button" onClick={handleDownload} disabled={readOnly || !date || isDownloading}>
+            {isDownloading ? 'Téléchargement…' : 'Télécharger les fichiers JSON'}
+          </button>
+        </div>
+
+        <div className="systeme-subsection">
+          <h4>Charger en base</h4>
+          <label className="systeme-field">
+            <span>Relevés (aggregated_snapshots.json)</span>
+            <input
+              ref={snapshotsInputRef}
+              type="file"
+              accept=".json"
+              disabled={readOnly}
+              onChange={(e) => setSnapshotsFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <label className="systeme-field">
+            <span>Notes Cci (edges_and_places_cci.json)</span>
+            <input
+              ref={cciInputRef}
+              type="file"
+              accept=".json"
+              disabled={readOnly}
+              onChange={(e) => setCciFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+
+          {uploadError && <p className="systeme-error">{uploadError}</p>}
+          {uploadSuccess && <p className="systeme-success">{uploadSuccess}</p>}
+
+          <button
+            type="button"
+            onClick={handleUpload}
+            disabled={readOnly || (!snapshotsFile && !cciFile) || isUploading}
+          >
+            {isUploading ? 'Chargement…' : 'Charger les fichiers'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

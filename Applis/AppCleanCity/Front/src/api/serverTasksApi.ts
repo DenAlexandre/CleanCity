@@ -38,3 +38,27 @@ export const assignItineraryNumbers = (credentials: AdminCredentials) => runTask
 
 /** Détecte les nouveaux dépassements de seuil et envoie les e-mails d'alarme correspondants. */
 export const detectAlarms = (credentials: AdminCredentials) => runTask('detect-alarms', credentials)
+
+/**
+ * Télécharge les relevés et notes Cci bruts (JSON) reçus de Cortexia pour une journée donnée, sans les
+ * importer (.zip contenant aggregated_snapshots.json et edges_and_places_cci.json).
+ */
+export async function downloadCortexiaData(
+  credentials: AdminCredentials,
+  date: string,
+): Promise<{ blob: Blob; fileName: string }> {
+  const params = new URLSearchParams({ date })
+  const response = await fetch(`${API_BASE_URL}/api/tasks/download-cortexia-data?${params}`, {
+    headers: {
+      'X-Admin-Username': credentials.adminUsername,
+      'X-Admin-Password': credentials.adminPassword,
+    },
+  })
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    throw new ServerTaskError(data?.error ?? 'Échec du téléchargement des fichiers Cortexia.')
+  }
+
+  return { blob: await response.blob(), fileName: `cortexia_${date}.zip` }
+}

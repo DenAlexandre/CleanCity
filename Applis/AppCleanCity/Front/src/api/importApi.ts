@@ -30,6 +30,32 @@ export async function importSnapshots(credentials: AdminCredentials, file: File)
   return response.json()
 }
 
+export interface ImportResult {
+  rowCount: number
+}
+
+/** Charge un fichier de notes Cci (edges_and_places_cci) dans la base. */
+export async function importCciMeasurements(credentials: AdminCredentials, file: File): Promise<ImportResult> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`${API_BASE_URL}/api/import/cci-measurements`, {
+    method: 'POST',
+    headers: {
+      'X-Admin-Username': credentials.adminUsername,
+      'X-Admin-Password': credentials.adminPassword,
+    },
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    throw new ImportError(data?.error ?? "Échec de l'import du fichier.")
+  }
+
+  return response.json()
+}
+
 export interface ClearImportDataResult {
   alarmsDeleted: number
   snapshotsDeleted: number

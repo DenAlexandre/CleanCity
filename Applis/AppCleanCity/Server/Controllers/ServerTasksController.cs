@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using CortexiaAuth.Api.Data;
 using CortexiaAuth.Api.Models;
 using CortexiaAuth.Api.Services;
@@ -86,6 +87,51 @@ public class ServerTasksController(
             var count = await taskService.DetectAlarmsAsync(ct);
             return new ServerTaskResult($"{count} nouvelle(s) alarme(s) détectée(s).");
         }, cancellationToken);
+
+    /// <summary>Télécharge les relevés et notes Cci bruts (JSON) reçus de Cortexia pour une journée donnée, sans les importer.</summary>
+    [HttpGet("download-cortexia-data")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> DownloadCortexiaData(
+        [FromQuery] DateOnly date,
+        [FromHeader(Name = "X-Admin-Username")] string? adminUsername,
+        [FromHeader(Name = "X-Admin-Password")] string? adminPassword,
+        CancellationToken cancellationToken)
+    {
+        var authError = await AuthenticateAsync(adminUsername, adminPassword, cancellationToken);
+        if (authError is not null)
+        {
+            return authError;
+        }
+
+        try
+        {
+            var data = await taskService.DownloadDailyDataAsync(date, cancellationToken);
+
+            using var zipStream = new MemoryStream();
+            using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
+            {
+                var snapshotsEntry = archive.CreateEntry("aggregated_snapshots.json", CompressionLevel.Fastest);
+                await using (var entryStream = snapshotsEntry.Open())
+                {
+                    await entryStream.WriteAsync(data.SnapshotsJson, cancellationToken);
+                }
+
+                var cciEntry = archive.CreateEntry("edges_and_places_cci.json", CompressionLevel.Fastest);
+                await using (var entryStream = cciEntry.Open())
+                {
+                    await entryStream.WriteAsync(data.CciMeasurementsJson, cancellationToken);
+                }
+            }
+
+            return File(zipStream.ToArray(), "application/zip", $"cortexia_{date:yyyy-MM-dd}.zip");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new { error = ex.Message });
+        }
+    }
 
     private async Task<ActionResult<ServerTaskResult>> RunAsync(
         string? username, string? password, Func<CancellationToken, Task<ServerTaskResult>> action, CancellationToken cancellationToken)

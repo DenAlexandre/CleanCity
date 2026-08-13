@@ -70,6 +70,22 @@ public class ServerTaskService(
     public Task<int> DetectAlarmsAsync(CancellationToken cancellationToken) =>
         alarmDetectionService.DetectAndNotifyAsync(cancellationToken);
 
+    public async Task<CortexiaDailyDataResult> DownloadDailyDataAsync(DateOnly date, CancellationToken cancellationToken)
+    {
+        var authorizationHeader = await AuthenticateServiceAccountAsync(cancellationToken);
+
+        var start = date.ToDateTime(TimeOnly.MinValue);
+        var end = start.AddDays(1);
+
+        var snapshots = await geoService.GetAggregatedSnapshotsAsync(start, end, authorizationHeader, cancellationToken);
+        EnsureSuccess(snapshots);
+
+        var cci = await geoService.GetEdgesAndPlacesCciAsync(start, end, authorizationHeader, cancellationToken);
+        EnsureSuccess(cci);
+
+        return new CortexiaDailyDataResult(snapshots.Body, cci.Body);
+    }
+
     private async Task<string> AuthenticateServiceAccountAsync(CancellationToken cancellationToken)
     {
         var username = configuration["Import:ServiceAccountUsername"];

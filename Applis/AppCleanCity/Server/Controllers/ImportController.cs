@@ -84,8 +84,21 @@ public class ImportController(
     [HttpPost("cci-measurements")]
     [ProducesResponseType(typeof(ImportResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public Task<ActionResult<ImportResult>> ImportCciMeasurements(IFormFile file, CancellationToken cancellationToken) =>
-        RunImportAsync(file, importService.ImportCciMeasurementsAsync, cancellationToken);
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ImportResult>> ImportCciMeasurements(
+        IFormFile file,
+        [FromHeader(Name = "X-Admin-Username")] string? adminUsername,
+        [FromHeader(Name = "X-Admin-Password")] string? adminPassword,
+        CancellationToken cancellationToken)
+    {
+        var authError = await AuthenticateAsync(adminUsername, adminPassword, cancellationToken);
+        if (authError is not null)
+        {
+            return authError;
+        }
+
+        return await RunImportAsync(file, importService.ImportCciMeasurementsAsync, cancellationToken);
+    }
 
     /// <summary>
     /// Supprime les données importées (relevés, notes Cci, alarmes) à partir d'une date/heure donnée
