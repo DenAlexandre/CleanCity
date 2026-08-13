@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Text;
+using System.Text.RegularExpressions;
 using CortexiaAuth.Api.Data;
 using CortexiaAuth.Api.Models;
 using Microsoft.AspNetCore.Identity;
@@ -59,8 +61,9 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
                 });
             }
 
+            var sql = RemoveRedundantConstraintDrops(Encoding.UTF8.GetString(dump.ToArray()));
             var fileName = $"cortexia_auth_{DateTime.UtcNow:yyyyMMdd_HHmmss}.sql";
-            return File(dump.ToArray(), "application/sql", fileName);
+            return File(Encoding.UTF8.GetBytes(sql), "application/sql", fileName);
         }
         catch (System.ComponentModel.Win32Exception ex)
         {
@@ -143,6 +146,25 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
                 error = $"Impossible de lancer psql ({ex.Message}) : vérifiez que le paquet postgresql-client est installé dans l'image.",
             });
         }
+    }
+
+    private static readonly Regex AttachPartitionRegex = new("ATTACH PARTITION public\\.\"([^\"]+)\"", RegexOptions.Multiline);
+    private static readonly Regex DropConstraintRegex = new(
+        """^ALTER TABLE IF EXISTS ONLY public\."[^"]+" DROP CONSTRAINT IF EXISTS "([^"]+)";\r?\n""", RegexOptions.Multiline);
+
+    /// <summary>
+    /// pg_dump --clean émet, pour les tables partitionnées (EdgeSnapshots/EdgeCciMeasurements), un
+    /// "DROP CONSTRAINT" sur la clé primaire de chaque partition — or Postgres refuse de dropper
+    /// directement une contrainte rattachée à l'index du parent ("cannot drop inherited constraint").
+    /// Ce drop est de toute façon redondant : la table elle-même est entièrement supprimée quelques
+    /// lignes plus loin (ce qui supprime sa contrainte avec elle). On ne retire que ces contraintes
+    /// rattachées (identifiées via "ATTACH PARTITION") — les autres DROP CONSTRAINT restent, ils
+    /// assurent l'ordre correct des drops entre tables lorsqu'il y a des clés étrangères.
+    /// </summary>
+    private static string RemoveRedundantConstraintDrops(string sql)
+    {
+        var attachedNames = AttachPartitionRegex.Matches(sql).Select(m => m.Groups[1].Value).ToHashSet();
+        return DropConstraintRegex.Replace(sql, m => attachedNames.Contains(m.Groups[1].Value) ? "" : m.Value);
     }
 
     private static ProcessStartInfo NewPostgresProcessStartInfo(string executable, NpgsqlConnectionStringBuilder connectionString)
