@@ -16,7 +16,7 @@ public interface IServerTaskService
 
     Task<int> DetectAlarmsAsync(CancellationToken cancellationToken);
 
-    /// <summary>Récupère depuis Cortexia les relevés et notes Cci bruts (JSON) d'une journée donnée, sans les importer.</summary>
+    /// <summary>Récupère depuis Cortexia les relevés et notes Cci bruts (JSON) depuis une date donnée jusqu'à maintenant, sans les importer.</summary>
     Task<CortexiaDailyDataResult> DownloadDailyDataAsync(DateOnly date, CancellationToken cancellationToken);
 }
 

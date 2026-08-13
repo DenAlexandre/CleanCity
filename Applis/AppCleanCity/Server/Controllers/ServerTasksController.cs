@@ -88,7 +88,7 @@ public class ServerTasksController(
             return new ServerTaskResult($"{count} nouvelle(s) alarme(s) détectée(s).");
         }, cancellationToken);
 
-    /// <summary>Télécharge les relevés et notes Cci bruts (JSON) reçus de Cortexia pour une journée donnée, sans les importer.</summary>
+    /// <summary>Télécharge les relevés et notes Cci bruts (JSON) reçus de Cortexia depuis une date donnée jusqu'à maintenant, sans les importer.</summary>
     [HttpGet("download-cortexia-data")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -74,8 +74,10 @@ public class ServerTaskService(
     {
         var authorizationHeader = await AuthenticateServiceAccountAsync(cancellationToken);
 
+        // Comme le cycle périodique (ImportMeasurementsAsync) : la borne de fin est toujours "maintenant",
+        // la date choisie n'est que le point de départ — Cortexia attend un intervalle [start, now).
         var start = date.ToDateTime(TimeOnly.MinValue);
-        var end = start.AddDays(1);
+        var end = DateTime.UtcNow;
 
         var snapshots = await geoService.GetAggregatedSnapshotsAsync(start, end, authorizationHeader, cancellationToken);
         EnsureSuccess(snapshots);

@@ -263,8 +263,9 @@ function CortexiaFilesCard() {
     <div className="systeme-card systeme-card-wide">
       <h3>Fichiers Cortexia (JSON)</h3>
       <p>
-        Télécharge les relevés et notes Cci bruts reçus de Cortexia pour une date donnée, ou recharge de tels
-        fichiers en base — utile pour rattraper une date précise sans dépendre du point de reprise automatique.
+        Télécharge les relevés et notes Cci bruts reçus de Cortexia depuis une date donnée jusqu'à maintenant, ou
+        recharge de tels fichiers en base — utile pour rattraper une date précise sans dépendre du point de reprise
+        automatique.
       </p>
 
       {readOnly && <p className="systeme-error">Réservé aux comptes disposant du droit "Système".</p>}
@@ -273,7 +274,7 @@ function CortexiaFilesCard() {
         <div className="systeme-subsection">
           <h4>Télécharger</h4>
           <label className="systeme-field">
-            <span>Date</span>
+            <span>À partir de</span>
             <input type="date" value={date} disabled={readOnly} onChange={(e) => setDate(e.target.value)} />
           </label>
 
