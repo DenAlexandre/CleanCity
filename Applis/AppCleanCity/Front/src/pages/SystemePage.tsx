@@ -59,8 +59,8 @@ export function SystemePage() {
     if (window.showSaveFilePicker) {
       try {
         handle = await window.showSaveFilePicker({
-          suggestedName: `cortexia_auth_${new Date().toISOString().slice(0, 10)}.sql`,
-          types: [{ description: 'Fichier SQL', accept: { 'application/sql': ['.sql'] } }],
+          suggestedName: `cortexia_auth_${new Date().toISOString().slice(0, 10)}.sql.gz`,
+          types: [{ description: 'Fichier SQL compressé', accept: { 'application/gzip': ['.gz'] } }],
         })
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return
@@ -132,14 +132,14 @@ export function SystemePage() {
           <div className="systeme-subsection">
             <h4>Restaurer</h4>
             <p>
-              Charge un fichier .sql (généré par "Exporter la base de données") et remplace tout le contenu actuel de
-              la base par celui de ce fichier. Action irréversible.
+              Charge un fichier .sql.gz (généré par "Exporter la base de données") et remplace tout le contenu actuel
+              de la base par celui de ce fichier. Action irréversible.
             </p>
 
             <input
               ref={restoreInputRef}
               type="file"
-              accept=".sql"
+              accept=".gz"
               onChange={(e) => setRestoreFile(e.target.files?.[0] ?? null)}
             />
 

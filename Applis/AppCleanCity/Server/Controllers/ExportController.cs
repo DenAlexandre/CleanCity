@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 using CortexiaAuth.Api.Data;
@@ -63,8 +64,18 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
             }
 
             var sql = RemoveRedundantConstraintDrops(Encoding.UTF8.GetString(dump.ToArray()));
-            var fileName = $"cortexia_auth_{DateTime.UtcNow:yyyyMMdd_HHmmss}.sql";
-            return File(Encoding.UTF8.GetBytes(sql), "application/sql", fileName);
+
+            // Compressé : un dump SQL brut (plein de DROP/ALTER/INSERT) déclenche le WAF de Cloudflare
+            // devant Render ("Blocked") dès qu'on le réutilise pour restaurer — le contenu compressé
+            // n'est plus lisible en clair par l'inspection de contenu. Réduit aussi la taille du fichier.
+            await using var gzip = new MemoryStream();
+            await using (var gzipStream = new GZipStream(gzip, CompressionLevel.Optimal, leaveOpen: true))
+            {
+                await gzipStream.WriteAsync(Encoding.UTF8.GetBytes(sql), cancellationToken);
+            }
+
+            var fileName = $"cortexia_auth_{DateTime.UtcNow:yyyyMMdd_HHmmss}.sql.gz";
+            return File(gzip.ToArray(), "application/gzip", fileName);
         }
         catch (System.ComponentModel.Win32Exception ex)
         {
@@ -76,7 +87,7 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
     }
 
     /// <summary>
-    /// Restaure la base à partir d'un fichier .sql généré par ExportDatabase : ce fichier contient déjà
+    /// Restaure la base à partir d'un fichier .sql.gz généré par ExportDatabase : ce fichier contient déjà
     /// des "DROP ... IF EXISTS" (option --clean du pg_dump), donc son exécution efface et recrée les
     /// objets existants — destructeur et irréversible, à n'utiliser qu'en connaissance de cause.
     /// </summary>
@@ -103,9 +114,9 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
             return BadRequest(new { error = "Fichier vide ou manquant." });
         }
 
-        if (!string.Equals(Path.GetExtension(file.FileName), ".sql", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(Path.GetExtension(file.FileName), ".gz", StringComparison.OrdinalIgnoreCase))
         {
-            return BadRequest(new { error = "Seul un fichier .sql est accepté." });
+            return BadRequest(new { error = "Seul un fichier .sql.gz (généré par \"Exporter la base de données\") est accepté." });
         }
 
         var connectionString = new NpgsqlConnectionStringBuilder(PostgresConnectionString.Normalize(configuration.GetConnectionString("Default")));
@@ -122,8 +133,9 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
             process.Start();
 
             await using (var fileStream = file.OpenReadStream())
+            await using (var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress))
             {
-                await fileStream.CopyToAsync(process.StandardInput.BaseStream, cancellationToken);
+                await gzipStream.CopyToAsync(process.StandardInput.BaseStream, cancellationToken);
             }
             process.StandardInput.Close();
 
