@@ -1,9 +1,17 @@
 <#
-    Reglages de dev partages (voir dev.local.ps1.example pour la liste des options). Charge
-    automatiquement par start-dev.ps1 s'il existe.
+    Reglages personnels de dev, non versionnes. Copie ce fichier en "dev.local.ps1" (ignore par
+    git) puis modifie les valeurs ci-dessous ; start-dev.ps1 le charge automatiquement s'il existe.
 #>
 
 # A $false pour ne pas demarrer le serveur de tuiles local (voir start-tileserver.ps1), par exemple
 # si Docker n'est pas installe ou si tu n'as pas besoin de la cartographie. Le Front retombe alors
 # sur le serveur public OpenStreetMap.
 $UseLocalTileServer = $false
+
+# "Local" (par defaut) : Postgres local via Docker (start-postgres.ps1). "Prod" : l'API locale se
+# connecte a la vraie base Neon (chaine de connexion a renseigner dans dev.local.secrets.ps1, voir
+# dev.local.secrets.ps1.example). ATTENTION en mode "Prod" : toute migration EF Core en attente
+# localement sera appliquee directement a la production au demarrage (Program.cs fait un
+# Database.Migrate() automatique), et CortexiaImportBackgroundService importera/ecrira des
+# donnees reelles depuis ta machine. A n'utiliser qu'en connaissance de cause.
+$Database = "Local"
