@@ -1,0 +1,340 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: url('assets/background.png') no-repeat center center fixed;
+  background-size: cover;
+  font-family: Arial, sans-serif;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: white;
+  padding: 10px 10px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.header .left-logos {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header .left-logos img {
+  height: 40px;
+  width: auto;
+}
+
+.header .center-logo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.header .center-logo img {
+  height: 50px;
+  width: auto;
+}
+
+.horizontal-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 70px;
+  background-color: #333;
+  color: white;
+  padding: 0px;
+  font-size: 18px;
+  border-bottom: 2px solid #ffffff;
+}
+
+.horizontal-menu-item {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  cursor: pointer;
+  background-color: #44444400;
+}
+
+.horizontal-menu img {
+  width: 50px;
+  height: 50px;
+}
+
+.home-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70px;
+  padding: 8px 7.5px;
+  border-right: 2px solid #ffffff;
+}
+
+.horizontal-menu-item select,
+.horizontal-menu-item input {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.horizontal-menu-item label {
+  margin-right: 5px;
+}
+
+.alert-icon img {
+  width: 50px;
+  height: 50px;
+}
+
+.tdb {
+  position: left;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-size: 40px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: rgb(255, 255, 255);
+}
+
+.vertical-divider {
+  width: 2px;
+  height: 60%;
+  background-color: white;
+  margin: 0 10px;
+  align-self: center;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  height: 100%;
+}
+
+.sidebar {
+  width: 70px;
+  background-color: #333;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  border-right: 2px solid #ffffff;
+}
+
+.sidebar-item {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  background-color: #44444400;
+}
+
+.sidebar-item img {
+  width: 50px;
+  height: 50px;
+}
+
+.sidebar-item:hover {
+  background-color: #55555555;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 20px;
+  padding: 20px;
+  width: 100%;
+  height: 100%;
+}
+
+.panel {
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  color: white;
+}
+
+.panel h2, .panel h3 {
+  margin-bottom: 10px;
+}
+
+.interest-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  justify-items: center;
+}
+
+.interest-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+  background-color: #4da6ff;
+  color: black;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.interest-item img {
+  width: 60%;
+  height: 60%;
+  transition: opacity 0.2s;
+}
+
+.interest-item .label {
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.interest-item:hover img {
+  opacity: 0;
+}
+
+.interest-item:hover::before {
+  content: attr(data-score);
+  position: absolute;
+  font-size: 18px;
+  font-weight: bold;
+  color: black;
+}
+
+/* Panel table (Rues les plus sales) */
+.panel.table {
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  padding: 20px;
+  color: white;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.panel.table h3 {
+  font-style: italic;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.street-table .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+}
+
+.street-table .score {
+  font-weight: bold;
+  font-size: 20px;
+  color: white;
+  background-color: red;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+}
+
+.street-table .street {
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+}
+
+.street-table .percentage {
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 50%;
+  padding: 5px 10px;
+}
+
+/* Couleurs dynamiques */
+.red {
+  background-color: red;
+  color: white;
+}
+
+.green {
+  background-color: green;
+  color: white;
+}
+
+.orange {
+  background-color: orange;
+  color: white;
+}
+
+.map {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(80, 82, 81, 0.8);
+}
+
+#expand-map-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 5px 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#expand-map-btn:hover {
+  background-color: rgba(200, 200, 200, 0.9);
+}
+
+.filters {
+  position: absolute;
+  top: 20%;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  width: 300px;
+}

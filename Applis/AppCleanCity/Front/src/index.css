@@ -1,0 +1,39 @@
+:root {
+  --color-primary: #0055a2;
+  --color-primary-dark: #003b73;
+  --color-accent: #f2c300;
+  --color-bg: #f4f6f8;
+  --color-surface: #ffffff;
+  --color-border: #e2e5ea;
+  --color-text: #23272f;
+  --color-text-muted: #6b7280;
+  --sidebar-width: 64px;
+  --sidebar-width-expanded: 200px;
+  --header-height: 56px;
+  --subheader-height: 48px;
+
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}

@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Postgres: démarrer",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/start-postgres.ps1"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" },
+      "problemMatcher": []
+    },
+    {
+      "label": "API: démarrer",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["run", "--urls", "http://localhost:5299"],
+      "options": { "cwd": "${workspaceFolder}/CortexiaAuth.Api" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" },
+      "problemMatcher": {
+        "pattern": [{ "regexp": "^.*$", "file": 1, "location": 2, "message": 2 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Génération.*$",
+          "endsPattern": "^.*Now listening on:.*$"
+        }
+      }
+    },
+    {
+      "label": "Front: démarrer",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "options": { "cwd": "${workspaceFolder}/Front" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" },
+      "problemMatcher": {
+        "pattern": [{ "regexp": "^.*$", "file": 1, "location": 2, "message": 2 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^\\s*VITE.*$",
+          "endsPattern": "^\\s*➜\\s*Local:.*$"
+        }
+      }
+    },
+    {
+      "label": "Démarrer tout (Front + Back)",
+      "dependsOn": ["Postgres: démarrer", "API: démarrer", "Front: démarrer"],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    }
+  ]
+}

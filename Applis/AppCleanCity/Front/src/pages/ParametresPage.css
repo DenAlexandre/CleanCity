@@ -1,0 +1,235 @@
+.parametres-page {
+  padding: 20px;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.parametres-tab-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Les gestionnaires de seuils/destinataires (page Paramètres) réutilisent .admin-card/
+   .admin-table-wrapper de la page Administration : on ne les fait remplir/défiler qu'ici, sans
+   changer leur comportement dans Administration où plusieurs cartes s'empilent normalement. */
+.parametres-tab-content > .admin-card {
+  flex: 1;
+  min-height: 0;
+}
+
+.parametres-tab-content .admin-table-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.parametres-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 16px 0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  margin: -20px -20px 0;
+}
+
+@media (max-width: 768px) {
+  .parametres-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .parametres-tabs button {
+    white-space: nowrap;
+  }
+}
+
+.parametres-tabs button {
+  border: none;
+  background: none;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.parametres-tabs button.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.parametres-card {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(2px);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 620px;
+}
+
+.parametres-card h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.parametres-card > p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.parametres-threshold {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.parametres-threshold h4 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.parametres-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.parametres-fields {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.parametres-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.parametres-fields input[type='number'] {
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  width: 100px;
+}
+
+.parametres-fields input[type='color'] {
+  width: 48px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.parametres-card button {
+  align-self: flex-start;
+  padding: 9px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.parametres-card button:hover {
+  background: var(--color-primary-dark);
+}
+
+.parametres-card button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.parametres-current-city {
+  color: var(--color-text) !important;
+}
+
+.parametres-city-search {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.parametres-city-search > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.parametres-city-search input {
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  max-width: 280px;
+}
+
+.parametres-city-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 280px;
+}
+
+.parametres-city-results button {
+  width: 100%;
+  text-align: left;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.parametres-city-results button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.parametres-error {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #fdecea;
+  color: #b3261e;
+  font-size: 13px;
+}
+
+.parametres-success {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #e6f4ea;
+  color: #1e7a34;
+  font-size: 13px;
+}

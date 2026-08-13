@@ -1,0 +1,11 @@
+V8/datasets/Donnees/images/**/*.jpg
+V8/datasets/Donnees/images/**/*.png
+V8/datasets/Donnees/images/**/*.jpeg
+V8/datasets/Donnees/images/**/*.txt
+
+runs/detect/*
+!runs/detect/.gitkeep
+
+V8/datasets/Donnees/images/train/labels.cache
+V8/datasets/Donnees/images/val/labels.cache
+V8/runs/detect/__pycache__/

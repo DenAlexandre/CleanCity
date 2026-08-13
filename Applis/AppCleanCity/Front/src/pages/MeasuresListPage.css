@@ -1,0 +1,203 @@
+.measures-list-page {
+  padding: 20px;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.measures-list-tab-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.measures-list-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 16px 0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  margin: -20px -20px 20px;
+}
+
+.measures-list-tabs button {
+  border: none;
+  background: none;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.measures-list-tabs button.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.measures-list-row {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+  height: 100%;
+}
+
+.measures-list-card {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(2px);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.measures-list-table-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.measures-list-chart-card {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.measures-list-card h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.measures-list-card > p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.measures-list-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.measures-list-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.measures-list-filters select,
+.measures-list-filters input {
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  min-width: 200px;
+}
+
+.measures-list-error {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #fdecea;
+  color: #b3261e;
+  font-size: 13px;
+}
+
+.measures-list-table-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.measures-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.measures-list-table th,
+.measures-list-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.measures-list-sort-button {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.measures-list-sort-arrow {
+  color: var(--color-primary);
+}
+
+.measures-list-empty {
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.measures-list-pagination {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+}
+
+.measures-list-pagination button {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.measures-list-pagination button:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.measures-list-pagination button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (max-width: 768px) {
+  .measures-list-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .measures-list-tabs button {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 900px) {
+  .measures-list-row {
+    flex-direction: column;
+    height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .measures-list-filters select,
+  .measures-list-filters input {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+}

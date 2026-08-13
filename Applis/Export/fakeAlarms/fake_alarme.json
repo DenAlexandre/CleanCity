@@ -1,0 +1,13 @@
+[
+  {
+    "id": "test-alarme-seringues-001",
+    "location": [48.7167, 2.2467],
+    "direction": 0,
+    "speed_ms": 0,
+    "suitcase_id": "test-fake-alarm",
+    "details": [17],
+    "date": "2026-08-12T10:00:00Z",
+    "posted_date": "2026-08-12T11:00:00Z",
+    "city_id": 1
+  }
+]

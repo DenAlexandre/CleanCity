@@ -1,0 +1,17 @@
+C'est un projet Vite + React. Pour lancer le front en dev :
+
+cd Front
+npm run dev
+
+Cela démarre le serveur de dev Vite (par défaut sur http://localhost:5173).
+
+Autres commandes utiles dans ce dossier Front :
+- npm run build — build de production
+- npm run preview — sert le build de production localement
+- npm run lint — lint avec oxlint
+
+
+
+
+
+

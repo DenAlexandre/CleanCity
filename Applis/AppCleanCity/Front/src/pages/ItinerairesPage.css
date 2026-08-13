@@ -1,0 +1,122 @@
+.itineraires-page {
+  padding: 20px;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.itineraires-row {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+}
+
+.itineraires-card {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(2px);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.itineraires-list-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.itineraires-detail-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.itineraires-card h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.itineraires-card > p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.itineraires-error {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #fdecea;
+  color: #b3261e;
+  font-size: 13px;
+}
+
+.itineraires-table-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.itineraires-detail-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+  z-index: 1;
+}
+
+.itineraires-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.itineraires-table th,
+.itineraires-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.itineraires-list-card .itineraires-table tbody tr {
+  cursor: pointer;
+}
+
+.itineraires-list-card .itineraires-table tbody tr:hover {
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+
+.itineraires-row-selected {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.itineraires-sort-button {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.itineraires-sort-arrow {
+  color: var(--color-primary);
+}
+
+.itineraires-empty {
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .itineraires-row {
+    flex-direction: column;
+    height: auto;
+  }
+}

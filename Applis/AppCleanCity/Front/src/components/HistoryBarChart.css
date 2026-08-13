@@ -1,0 +1,103 @@
+.history-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+
+.history-chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.history-chart-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.history-chart-body {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-height: 120px;
+}
+
+.history-chart-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-align: right;
+  padding-bottom: 18px;
+}
+
+.history-chart-plot {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.history-chart-scroll {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.history-chart-gridlines {
+  position: absolute;
+  inset: 0;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.history-chart-gridline {
+  border-top: 1px solid var(--color-border);
+}
+
+.history-chart-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.history-chart-bar-wrapper {
+  flex: 1;
+  /* 0 et non une valeur fixe : avec beaucoup de barres (grande période), le libellé de date en
+     nowrap ne doit pas forcer chaque colonne à sa largeur de texte, sous peine de faire déborder
+     tout le graphique de sa carte. Le texte peut alors légèrement dépasser visuellement sa
+     colonne, ce qui reste correct pour un axe de dates épars (un libellé tous les ~7 jours). */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 3px;
+}
+
+.history-chart-bar {
+  width: 100%;
+  max-width: 18px;
+  background: var(--color-primary);
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+}
+
+.history-chart-bar-date {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  height: 14px;
+}

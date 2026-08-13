@@ -1,0 +1,12 @@
+{
+  "scripts": {
+	"postinstall": "cd server && npm install && cd ../client && npm install && cd ../traitement && pip install -r requirements.txt",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

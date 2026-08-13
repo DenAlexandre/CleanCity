@@ -1,0 +1,11 @@
+# Dataset paths
+path: ../datasets/Donnees
+train: images/train
+val: images/val
+test: images/test
+
+# Classes
+nc: 2
+names:
+  0: 'bottle'
+  1: 'cigarette'

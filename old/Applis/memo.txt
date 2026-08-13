@@ -1,0 +1,15 @@
+
+  http://localhost:5173/
+
+
+
+Compte user (rôle user)
+- Email : user@example.com
+- Mot de passe : password123
+
+Compte admin (déjà existant, rôle admin)
+- Email : admin@example.com
+- Mot de passe : changeme123
+
+
+

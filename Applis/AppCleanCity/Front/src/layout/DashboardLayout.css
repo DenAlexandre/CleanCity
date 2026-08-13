@@ -1,0 +1,27 @@
+.dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.dashboard-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.dashboard-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dashboard-main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+}

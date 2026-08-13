@@ -1,0 +1,6 @@
+pymongo
+pandas
+geopandas
+shapely
+flask
+requests
