@@ -52,6 +52,11 @@ public class AuthController(
             return Unauthorized(new { error = "Identifiant ou mot de passe incorrect." });
         }
 
+        if (!user.Role.Permissions.ManageCortexia)
+        {
+            return Ok(new SiteLoginResponse(string.Empty, string.Empty, user.Role.Permissions));
+        }
+
         var cortexiaPassword = credentialProtector.Unprotect(user.CortexiaPasswordProtected);
 
         try
@@ -83,6 +88,7 @@ public class AuthController(
     {
         var isBootstrap = !await dbContext.AppUsers.AnyAsync(cancellationToken);
         int roleId;
+        bool requiresCortexiaCredentials;
 
         if (isBootstrap)
         {
@@ -95,6 +101,7 @@ public class AuthController(
             }
 
             roleId = adminRole.Id;
+            requiresCortexiaCredentials = adminRole.Permissions.ManageCortexia;
         }
         else
         {
@@ -104,12 +111,19 @@ public class AuthController(
                 return authError;
             }
 
-            if (request.RoleId is null || !await dbContext.Roles.AnyAsync(r => r.Id == request.RoleId, cancellationToken))
+            var role = request.RoleId is null ? null : await dbContext.Roles.SingleOrDefaultAsync(r => r.Id == request.RoleId, cancellationToken);
+            if (role is null)
             {
                 return BadRequest(new { error = "Rôle inconnu : renseignez un RoleId valide." });
             }
 
-            roleId = request.RoleId.Value;
+            roleId = role.Id;
+            requiresCortexiaCredentials = role.Permissions.ManageCortexia;
+        }
+
+        if (requiresCortexiaCredentials && (string.IsNullOrEmpty(request.CortexiaUsername) || string.IsNullOrEmpty(request.CortexiaPassword)))
+        {
+            return BadRequest(new { error = "Identifiant et mot de passe Cortexia requis pour un rôle avec le droit 'Gestion Cortexia'." });
         }
 
         if (await dbContext.AppUsers.AnyAsync(u => u.Username == request.Username, cancellationToken))
@@ -189,9 +203,15 @@ public class AuthController(
             return NotFound();
         }
 
-        if (!await dbContext.Roles.AnyAsync(r => r.Id == request.RoleId, cancellationToken))
+        var role = await dbContext.Roles.SingleOrDefaultAsync(r => r.Id == request.RoleId, cancellationToken);
+        if (role is null)
         {
             return BadRequest(new { error = "Rôle inconnu." });
+        }
+
+        if (role.Permissions.ManageCortexia && string.IsNullOrEmpty(request.CortexiaUsername))
+        {
+            return BadRequest(new { error = "Identifiant Cortexia requis pour un rôle avec le droit 'Gestion Cortexia'." });
         }
 
         if (!string.Equals(user.Username, request.Username, StringComparison.Ordinal)

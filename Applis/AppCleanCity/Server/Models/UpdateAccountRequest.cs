@@ -11,7 +11,7 @@ public class UpdateAccountRequest
     [EmailAddress]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
+    /// <summary>Requis uniquement pour les rôles ayant le droit "Gestion Cortexia".</summary>
     public string CortexiaUsername { get; set; } = string.Empty;
 
     /// <summary>Laisser vide pour conserver le mot de passe Cortexia existant.</summary>

@@ -14,10 +14,10 @@ public class RegisterAppUserRequest
     [Required]
     public string Password { get; set; } = string.Empty;
 
-    [Required]
+    /// <summary>Requis uniquement pour les rôles ayant le droit "Gestion Cortexia".</summary>
     public string CortexiaUsername { get; set; } = string.Empty;
 
-    [Required]
+    /// <summary>Requis uniquement pour les rôles ayant le droit "Gestion Cortexia".</summary>
     public string CortexiaPassword { get; set; } = string.Empty;
 
     /// <summary>Ignoré pour le tout premier compte du site (bootstrap) : rôle Admin assigné automatiquement.</summary>
