@@ -10,6 +10,10 @@
 # Donnees OSM telechargees pour le serveur de tuiles local (voir start-tileserver.ps1)
 .tileserver-data/
 
+# Chaine de connexion Neon (mot de passe en clair) pour start-dev.ps1 en mode "Prod" (voir
+# dev.local.secrets.ps1.example) : contrairement a dev.local.ps1, celui-ci ne doit jamais etre commit.
+dev.local.secrets.ps1
+
 # User-specific files
 *.rsuser
 *.suo

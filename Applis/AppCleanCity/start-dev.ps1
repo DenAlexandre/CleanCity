@@ -15,9 +15,29 @@ $FrontLocalEnvPath = Join-Path $FrontDir ".env.development.local"
 
 # Reglages personnels non versionnes : copie dev.local.ps1.example en dev.local.ps1 pour les modifier.
 $UseLocalTileServer = $true
+$Database = "Local"
 $LocalConfigPath = Join-Path $RootDir "dev.local.ps1"
 if (Test-Path $LocalConfigPath) {
     . $LocalConfigPath
+}
+
+# Secrets (chaine de connexion Neon) : jamais commit, voir dev.local.secrets.ps1.example.
+$ProdConnectionString = $null
+$SecretsConfigPath = Join-Path $RootDir "dev.local.secrets.ps1"
+if (Test-Path $SecretsConfigPath) {
+    . $SecretsConfigPath
+}
+
+if ($Database -eq "Prod") {
+    if ([string]::IsNullOrWhiteSpace($ProdConnectionString)) {
+        Write-Error "`$Database = 'Prod' (dev.local.ps1) mais `$ProdConnectionString n'est pas defini. Copie dev.local.secrets.ps1.example en dev.local.secrets.ps1 et renseigne la chaine de connexion Neon."
+        exit 1
+    }
+    Write-Warning "MODE PROD : l'API locale va se connecter a la base de PRODUCTION (Neon), pas a Postgres local. Toute migration EF Core en attente sera appliquee a la prod au demarrage, et les taches d'import Cortexia en arriere-plan vont ecrire des donnees reelles."
+    $env:ConnectionStrings__Default = $ProdConnectionString
+}
+else {
+    Remove-Item Env:\ConnectionStrings__Default -ErrorAction SilentlyContinue
 }
 
 & (Join-Path $RootDir "start-postgres.ps1")
