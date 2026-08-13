@@ -40,25 +40,35 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
         startInfo.ArgumentList.Add("--clean");
         startInfo.ArgumentList.Add("--if-exists");
 
-        using var process = new Process { StartInfo = startInfo };
-        process.Start();
+        try
+        {
+            using var process = new Process { StartInfo = startInfo };
+            process.Start();
 
-        await using var dump = new MemoryStream();
-        var copyStdoutTask = process.StandardOutput.BaseStream.CopyToAsync(dump, cancellationToken);
-        var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
-        await Task.WhenAll(copyStdoutTask, stderrTask);
-        await process.WaitForExitAsync(cancellationToken);
+            await using var dump = new MemoryStream();
+            var copyStdoutTask = process.StandardOutput.BaseStream.CopyToAsync(dump, cancellationToken);
+            var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+            await Task.WhenAll(copyStdoutTask, stderrTask);
+            await process.WaitForExitAsync(cancellationToken);
 
-        if (process.ExitCode != 0)
+            if (process.ExitCode != 0)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    error = $"pg_dump a échoué (code {process.ExitCode}) : {stderrTask.Result}",
+                });
+            }
+
+            var fileName = $"cortexia_auth_{DateTime.UtcNow:yyyyMMdd_HHmmss}.sql";
+            return File(dump.ToArray(), "application/sql", fileName);
+        }
+        catch (System.ComponentModel.Win32Exception ex)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new
             {
-                error = $"pg_dump a échoué (code {process.ExitCode}) : {stderrTask.Result}",
+                error = $"Impossible de lancer pg_dump ({ex.Message}) : vérifiez que le paquet postgresql-client est installé dans l'image.",
             });
         }
-
-        var fileName = $"cortexia_auth_{DateTime.UtcNow:yyyyMMdd_HHmmss}.sql";
-        return File(dump.ToArray(), "application/sql", fileName);
     }
 
     /// <summary>
@@ -102,27 +112,37 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
         startInfo.ArgumentList.Add("-v");
         startInfo.ArgumentList.Add("ON_ERROR_STOP=1");
 
-        using var process = new Process { StartInfo = startInfo };
-        process.Start();
-
-        await using (var fileStream = file.OpenReadStream())
+        try
         {
-            await fileStream.CopyToAsync(process.StandardInput.BaseStream, cancellationToken);
+            using var process = new Process { StartInfo = startInfo };
+            process.Start();
+
+            await using (var fileStream = file.OpenReadStream())
+            {
+                await fileStream.CopyToAsync(process.StandardInput.BaseStream, cancellationToken);
+            }
+            process.StandardInput.Close();
+
+            var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+            await process.WaitForExitAsync(cancellationToken);
+
+            if (process.ExitCode != 0)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    error = $"La restauration a échoué (code {process.ExitCode}) : {await stderrTask}",
+                });
+            }
+
+            return NoContent();
         }
-        process.StandardInput.Close();
-
-        var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
-        await process.WaitForExitAsync(cancellationToken);
-
-        if (process.ExitCode != 0)
+        catch (System.ComponentModel.Win32Exception ex)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new
             {
-                error = $"La restauration a échoué (code {process.ExitCode}) : {await stderrTask}",
+                error = $"Impossible de lancer psql ({ex.Message}) : vérifiez que le paquet postgresql-client est installé dans l'image.",
             });
         }
-
-        return NoContent();
     }
 
     private static ProcessStartInfo NewPostgresProcessStartInfo(string executable, NpgsqlConnectionStringBuilder connectionString)
