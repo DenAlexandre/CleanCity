@@ -9,9 +9,9 @@ using Npgsql;
 namespace CortexiaAuth.Api.Controllers;
 
 /// <summary>
-/// Export d'une sauvegarde .sql de la base, via "docker exec pg_dump" sur le conteneur Postgres
-/// (voir start-postgres.ps1). Suppose que le conteneur tourne en local, ce qui est le cas de
-/// l'environnement de développement actuel.
+/// Sauvegarde/restauration de la base via pg_dump/psql, connectés directement à la base configurée
+/// (ConnectionStrings:Default) — fonctionne aussi bien en local qu'en production (Neon), sans
+/// dépendre d'un conteneur Postgres local.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -32,22 +32,10 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
             return authError;
         }
 
-        var containerName = configuration["Export:PostgresContainerName"] ?? "cleancity-pg";
         var connectionString = new NpgsqlConnectionStringBuilder(configuration.GetConnectionString("Default"));
 
-        var startInfo = new ProcessStartInfo("docker")
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-        };
-        startInfo.ArgumentList.Add("exec");
-        startInfo.ArgumentList.Add(containerName);
-        startInfo.ArgumentList.Add("pg_dump");
-        startInfo.ArgumentList.Add("-U");
-        startInfo.ArgumentList.Add(connectionString.Username ?? "postgres");
-        startInfo.ArgumentList.Add("-d");
-        startInfo.ArgumentList.Add(connectionString.Database ?? "cortexia_auth");
+        var startInfo = NewPostgresProcessStartInfo("pg_dump", connectionString);
+        startInfo.RedirectStandardOutput = true;
         startInfo.ArgumentList.Add("--no-owner");
         startInfo.ArgumentList.Add("--clean");
         startInfo.ArgumentList.Add("--if-exists");
@@ -74,6 +62,103 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
     }
 
     /// <summary>
+    /// Restaure la base à partir d'un fichier .sql généré par ExportDatabase : ce fichier contient déjà
+    /// des "DROP ... IF EXISTS" (option --clean du pg_dump), donc son exécution efface et recrée les
+    /// objets existants — destructeur et irréversible, à n'utiliser qu'en connaissance de cause.
+    /// </summary>
+    [HttpPost("restore")]
+    [RequestSizeLimit(500_000_000)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> RestoreDatabase(
+        IFormFile file,
+        [FromHeader(Name = "X-Admin-Username")] string? username,
+        [FromHeader(Name = "X-Admin-Password")] string? password,
+        CancellationToken cancellationToken)
+    {
+        var authError = await AuthenticateAsync(username, password, cancellationToken);
+        if (authError is not null)
+        {
+            return authError;
+        }
+
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new { error = "Fichier vide ou manquant." });
+        }
+
+        if (!string.Equals(Path.GetExtension(file.FileName), ".sql", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = "Seul un fichier .sql est accepté." });
+        }
+
+        var connectionString = new NpgsqlConnectionStringBuilder(configuration.GetConnectionString("Default"));
+
+        var startInfo = NewPostgresProcessStartInfo("psql", connectionString);
+        startInfo.RedirectStandardInput = true;
+        startInfo.ArgumentList.Add("--single-transaction");
+        startInfo.ArgumentList.Add("-v");
+        startInfo.ArgumentList.Add("ON_ERROR_STOP=1");
+
+        using var process = new Process { StartInfo = startInfo };
+        process.Start();
+
+        await using (var fileStream = file.OpenReadStream())
+        {
+            await fileStream.CopyToAsync(process.StandardInput.BaseStream, cancellationToken);
+        }
+        process.StandardInput.Close();
+
+        var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+        await process.WaitForExitAsync(cancellationToken);
+
+        if (process.ExitCode != 0)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                error = $"La restauration a échoué (code {process.ExitCode}) : {await stderrTask}",
+            });
+        }
+
+        return NoContent();
+    }
+
+    private static ProcessStartInfo NewPostgresProcessStartInfo(string executable, NpgsqlConnectionStringBuilder connectionString)
+    {
+        var startInfo = new ProcessStartInfo(executable)
+        {
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        startInfo.ArgumentList.Add("-h");
+        startInfo.ArgumentList.Add(connectionString.Host ?? "localhost");
+        startInfo.ArgumentList.Add("-p");
+        startInfo.ArgumentList.Add((connectionString.Port == 0 ? 5432 : connectionString.Port).ToString());
+        startInfo.ArgumentList.Add("-U");
+        startInfo.ArgumentList.Add(connectionString.Username ?? "postgres");
+        startInfo.ArgumentList.Add("-d");
+        startInfo.ArgumentList.Add(connectionString.Database ?? "cortexia_auth");
+
+        // PGPASSWORD (plutôt qu'un mot de passe dans les arguments) : invisible depuis "ps"/la liste des
+        // process d'autres utilisateurs. PGSSLMODE reprend le mode déjà négocié par Npgsql (Neon exige SSL).
+        startInfo.Environment["PGPASSWORD"] = connectionString.Password ?? "";
+        startInfo.Environment["PGSSLMODE"] = connectionString.SslMode switch
+        {
+            SslMode.Disable => "disable",
+            SslMode.Allow => "allow",
+            SslMode.Prefer => "prefer",
+            SslMode.Require => "require",
+            SslMode.VerifyCA => "verify-ca",
+            SslMode.VerifyFull => "verify-full",
+            _ => "prefer",
+        };
+
+        return startInfo;
+    }
+
+    /// <summary>
     /// Authentifie l'appelant via les headers X-Admin-Username / X-Admin-Password et vérifie le
     /// droit ViewSysteme (même contrat que les autres contrôleurs, pas de session/JWT côté site).
     /// </summary>
@@ -81,7 +166,7 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
     {
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
         {
-            return Unauthorized(new { error = "Authentification requise pour exporter la base." });
+            return Unauthorized(new { error = "Authentification requise pour exporter/restaurer la base." });
         }
 
         var user = await dbContext.AppUsers.Include(u => u.Role).SingleOrDefaultAsync(u => u.Username == username, cancellationToken);

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { exportDatabase, ExportError } from '../api/exportApi'
+import { exportDatabase, restoreDatabase, ExportError } from '../api/exportApi'
 import { importSnapshots, importCciMeasurements, clearImportData, ImportError } from '../api/importApi'
 import { clearAlarms, AlarmsError } from '../api/alarmsApi'
 import {
@@ -42,6 +42,12 @@ export function SystemePage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
+  const restoreInputRef = useRef<HTMLInputElement>(null)
+  const [restoreFile, setRestoreFile] = useState<File | null>(null)
+  const [isRestoring, setIsRestoring] = useState(false)
+  const [restoreError, setRestoreError] = useState<string | null>(null)
+  const [restoreSuccess, setRestoreSuccess] = useState<string | null>(null)
+
   async function handleExport() {
     if (!siteCredentials) return
     setError(null)
@@ -80,18 +86,76 @@ export function SystemePage() {
     }
   }
 
+  async function handleRestore() {
+    if (!siteCredentials || !restoreFile) return
+    if (
+      !window.confirm(
+        `Restaurer la base à partir de "${restoreFile.name}" ? Toutes les données actuelles seront définitivement effacées et remplacées par le contenu de ce fichier.`,
+      )
+    ) {
+      return
+    }
+
+    setRestoreError(null)
+    setRestoreSuccess(null)
+    setIsRestoring(true)
+    try {
+      await restoreDatabase(siteCredentials, restoreFile)
+      setRestoreSuccess('Restauration terminée.')
+      setRestoreFile(null)
+      if (restoreInputRef.current) restoreInputRef.current.value = ''
+    } catch (err) {
+      setRestoreError(err instanceof ExportError ? err.message : 'Erreur inattendue lors de la restauration.')
+    } finally {
+      setIsRestoring(false)
+    }
+  }
+
   return (
     <div className="systeme-page">
-      <div className="systeme-card">
+      <div className="systeme-card systeme-card-wide">
         <h3>Export de la base de données</h3>
-        <p>Génère une sauvegarde complète de la base au format .sql (PostgreSQL / pg_dump).</p>
 
-        {error && <p className="systeme-error">{error}</p>}
-        {success && <p className="systeme-success">{success}</p>}
+        <div className="systeme-subsection-row">
+          <div className="systeme-subsection">
+            <h4>Sauvegarder</h4>
+            <p>Génère une sauvegarde complète de la base au format .sql (PostgreSQL / pg_dump).</p>
 
-        <button type="button" onClick={handleExport} disabled={isExporting}>
-          {isExporting ? 'Export en cours…' : 'Exporter la base de données'}
-        </button>
+            {error && <p className="systeme-error">{error}</p>}
+            {success && <p className="systeme-success">{success}</p>}
+
+            <button type="button" onClick={handleExport} disabled={isExporting}>
+              {isExporting ? 'Export en cours…' : 'Exporter la base de données'}
+            </button>
+          </div>
+
+          <div className="systeme-subsection">
+            <h4>Restaurer</h4>
+            <p>
+              Charge un fichier .sql (généré par "Exporter la base de données") et remplace tout le contenu actuel de
+              la base par celui de ce fichier. Action irréversible.
+            </p>
+
+            <input
+              ref={restoreInputRef}
+              type="file"
+              accept=".sql"
+              onChange={(e) => setRestoreFile(e.target.files?.[0] ?? null)}
+            />
+
+            {restoreError && <p className="systeme-error">{restoreError}</p>}
+            {restoreSuccess && <p className="systeme-success">{restoreSuccess}</p>}
+
+            <button
+              type="button"
+              className="systeme-danger"
+              onClick={handleRestore}
+              disabled={!restoreFile || isRestoring}
+            >
+              {isRestoring ? 'Restauration…' : 'Restaurer la base de données'}
+            </button>
+          </div>
+        </div>
       </div>
 
       <ClearImportDataCard />

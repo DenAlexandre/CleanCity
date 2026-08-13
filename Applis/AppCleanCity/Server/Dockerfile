@@ -8,8 +8,10 @@ RUN dotnet publish CortexiaAuth.Api.csproj -c Release -o /app --no-restore
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 # Npgsql charge libgssapi_krb5 pour la negociation GSSAPI/SSPI ; absent de l'image aspnet minimale.
+# postgresql-client fournit pg_dump/psql, utilises par ExportController pour sauvegarder/restaurer
+# directement sur Neon (connexion reseau, pas de dependance a un conteneur Postgres local).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app .
 ENV ASPNETCORE_HTTP_PORTS=8080
