@@ -1,0 +1,18 @@
+
+
+
+
+
+Premiere fois sur Neon :
+
+Invoke-RestMethod -Method Post -Uri "https://cleancity-mat6.onrender.com/api/Auth/users" `
+  -ContentType "application/json" `
+  -Body (@{
+      Username        = "Denis"
+      Password        = "alexandre@s3m3ru"
+      Email           = "d.alexandre@semeru.fayat.com"
+      CortexiaUsername = "d.alexandre@semeru.fayat.com"
+      CortexiaPassword = "alexandre@s3m3ru"
+  } | ConvertTo-Json)
+
+
