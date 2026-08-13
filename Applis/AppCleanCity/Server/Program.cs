@@ -42,7 +42,7 @@ builder.Services.AddSwaggerGen(options =>
 
 // Data source partagé : EF Core et le service d'import (COPY binaire direct) utilisent
 // la même configuration de mapping NetTopologySuite pour les colonnes geometry/geography.
-var npgsqlDataSource = new NpgsqlDataSourceBuilder(NormalizeConnectionString(builder.Configuration.GetConnectionString("Default")))
+var npgsqlDataSource = new NpgsqlDataSourceBuilder(PostgresConnectionString.Normalize(builder.Configuration.GetConnectionString("Default")))
     .UseNetTopologySuite()
     .Build();
 builder.Services.AddSingleton(npgsqlDataSource);
@@ -122,64 +122,3 @@ app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
 app.Run();
-
-// Neon (et d'autres PaaS) fournissent la chaine de connexion au format URI (postgresql://user:pass@host/db?sslmode=require),
-// alors que Npgsql attend le format cle=valeur. On convertit ici pour eviter de devoir reformater la variable
-// d'environnement a la main a chaque redeploiement.
-static string NormalizeConnectionString(string? connectionString)
-{
-    if (string.IsNullOrWhiteSpace(connectionString))
-        return connectionString ?? string.Empty;
-
-    if (!connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase)
-        && !connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
-    {
-        return connectionString;
-    }
-
-    var uri = new Uri(connectionString);
-    var userInfo = uri.UserInfo.Split(':', 2);
-
-    var csBuilder = new NpgsqlConnectionStringBuilder
-    {
-        Host = uri.Host,
-        Port = uri.IsDefaultPort ? 5432 : uri.Port,
-        Database = uri.AbsolutePath.TrimStart('/'),
-        Username = Uri.UnescapeDataString(userInfo[0]),
-        Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : null,
-    };
-
-    foreach (var pair in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
-    {
-        var kv = pair.Split('=', 2);
-        var key = Uri.UnescapeDataString(kv[0]);
-        var value = kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : string.Empty;
-
-        switch (key.ToLowerInvariant())
-        {
-            case "sslmode":
-                csBuilder.SslMode = value.ToLowerInvariant() switch
-                {
-                    "disable" => SslMode.Disable,
-                    "allow" => SslMode.Allow,
-                    "prefer" => SslMode.Prefer,
-                    "require" => SslMode.Require,
-                    "verify-ca" or "verifyca" => SslMode.VerifyCA,
-                    "verify-full" or "verifyfull" => SslMode.VerifyFull,
-                    _ => csBuilder.SslMode,
-                };
-                break;
-            case "channel_binding":
-                csBuilder.ChannelBinding = value.ToLowerInvariant() switch
-                {
-                    "disable" => ChannelBinding.Disable,
-                    "prefer" => ChannelBinding.Prefer,
-                    "require" => ChannelBinding.Require,
-                    _ => csBuilder.ChannelBinding,
-                };
-                break;
-        }
-    }
-
-    return csBuilder.ConnectionString;
-}

@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CortexiaAuth.Api.Data;
 using CortexiaAuth.Api.Models;
+using CortexiaAuth.Api.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +35,7 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
             return authError;
         }
 
-        var connectionString = new NpgsqlConnectionStringBuilder(configuration.GetConnectionString("Default"));
+        var connectionString = new NpgsqlConnectionStringBuilder(PostgresConnectionString.Normalize(configuration.GetConnectionString("Default")));
 
         var startInfo = NewPostgresProcessStartInfo("pg_dump", connectionString);
         startInfo.RedirectStandardOutput = true;
@@ -107,7 +108,7 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
             return BadRequest(new { error = "Seul un fichier .sql est accepté." });
         }
 
-        var connectionString = new NpgsqlConnectionStringBuilder(configuration.GetConnectionString("Default"));
+        var connectionString = new NpgsqlConnectionStringBuilder(PostgresConnectionString.Normalize(configuration.GetConnectionString("Default")));
 
         var startInfo = NewPostgresProcessStartInfo("psql", connectionString);
         startInfo.RedirectStandardInput = true;
