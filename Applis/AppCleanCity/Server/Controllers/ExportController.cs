@@ -41,6 +41,11 @@ public class ExportController(AppDbContext dbContext, PasswordHasher<AppUser> pa
         var startInfo = NewPostgresProcessStartInfo("pg_dump", connectionString);
         startInfo.RedirectStandardOutput = true;
         startInfo.ArgumentList.Add("--no-owner");
+        // Neon (comme la plupart des managed Postgres) connecte via un rôle non-superuser
+        // (neondb_owner) : rejouer les GRANT/ALTER DEFAULT PRIVILEGES du dump avec ce même rôle
+        // échoue ("permission denied to change default privileges"). Comme la restauration se fait
+        // toujours avec ce rôle unique, ces droits sont de toute façon redondants.
+        startInfo.ArgumentList.Add("--no-privileges");
         startInfo.ArgumentList.Add("--clean");
         startInfo.ArgumentList.Add("--if-exists");
 
